@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Android.Widget;
+using Microsoft.Maui.DeviceTests.Stubs;
 using Microsoft.Maui.Graphics;
 using Microsoft.Maui.Handlers;
 
@@ -52,6 +53,14 @@ namespace Microsoft.Maui.DeviceTests
 				action?.Invoke();
 				platformStepper.AssertContainsColor(color);
 			});
+		}
+
+		[Fact(DisplayName = "Control meets basic accessibility requirements")]
+		[Category(TestCategory.Accessibility)]
+		public async Task PlatformViewIsAccessible()
+		{
+			var view = new StepperStub();
+			await AssertPlatformViewIsAccessible(view);
 		}
 	}
 }
