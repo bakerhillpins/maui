@@ -64,10 +64,7 @@ namespace Microsoft.Maui.DeviceTests
 				}
 				finally
 				{
-					if (window.Handler != null)
-					{
-						window.Handler.DisconnectHandler();
-					}
+					window.Handler?.DisconnectHandler();
 
 					fragmentManager
 						.BeginTransaction()

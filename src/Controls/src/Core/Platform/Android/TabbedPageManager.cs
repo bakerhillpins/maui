@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using Android.App.Roles;
 using Android.Content;
 using Android.Content.Res;
 using Android.Graphics;
@@ -181,7 +182,7 @@ namespace Microsoft.Maui.Controls.Handlers
 						.GetNavigationRootManager()
 						.FragmentManager;
 
-				if (fragmentManager.IsAlive() && !fragmentManager.IsDestroyed)
+				if (!fragmentManager.IsDestroyed())
 				{
 					_ = _context
 							.GetNavigationRootManager()
@@ -206,21 +207,25 @@ namespace Microsoft.Maui.Controls.Handlers
 			SetTabLayout();
 		}
 
+		void RootViewChanged(object sender, EventArgs e)
+		{
+			if (sender is NavigationRootManager rootManager)
+			{
+				rootManager.RootViewChanged -= RootViewChanged;
+				SetTabLayout();
+			}
+		}
+
 		internal void SetTabLayout()
 		{
 			int id;
 			var rootManager =
 				_context.GetNavigationRootManager();
+
 			_tabItemStyleLoaded = false;
 			if (rootManager.RootView == null)
 			{
 				rootManager.RootViewChanged += RootViewChanged;
-
-				void RootViewChanged(object sender, EventArgs e)
-				{
-					rootManager.RootViewChanged -= RootViewChanged;
-					SetTabLayout();
-				}
 
 				return;
 			}
