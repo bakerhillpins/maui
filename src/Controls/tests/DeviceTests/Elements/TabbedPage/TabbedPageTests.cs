@@ -115,6 +115,7 @@ namespace Microsoft.Maui.DeviceTests
 			});
 		}
 
+#if !WINDOWS
 		[Theory]
 #if ANDROID
 		[InlineData(true)]
@@ -124,7 +125,7 @@ namespace Microsoft.Maui.DeviceTests
 		{
 			SetupBuilder();
 			var tabbedPage = CreateBasicTabbedPage(bottomTabs);
-			var secondPage = new NavigationPage(new ContentPage());
+			var secondPage = new NavigationPage(new ContentPage()) { Title = "Second Page" };
 			tabbedPage.Children.Add(secondPage);
 			var firstPage = tabbedPage.Children[0];
 
@@ -142,8 +143,9 @@ namespace Microsoft.Maui.DeviceTests
 				Assert.Equal(tabbedPage.CurrentPage, secondPage);
 			});
 		}
+#endif
 
-		TabbedPage CreateBasicTabbedPage(bool bottomTabs)
+		TabbedPage CreateBasicTabbedPage(bool bottomTabs = false)
 		{
 			var tabs = new TabbedPage()
 			{
@@ -160,7 +162,7 @@ namespace Microsoft.Maui.DeviceTests
 			}
 			else
 			{
-				Controls.PlatformConfiguration.AndroidSpecific.TabbedPage.SetToolbarPlacement(tabs, 
+				Controls.PlatformConfiguration.AndroidSpecific.TabbedPage.SetToolbarPlacement(tabs,
 					Controls.PlatformConfiguration.AndroidSpecific.ToolbarPlacement.Top);
 			}
 
