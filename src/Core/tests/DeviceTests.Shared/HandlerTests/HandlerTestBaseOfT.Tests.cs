@@ -113,7 +113,7 @@ namespace Microsoft.Maui.DeviceTests
 		}
 
 		[Fact(DisplayName = "Semantic Description is set correctly"
-#if __ANDROID__
+#if ANDROID
 			, Skip = "This value can't be validated through automated tests"
 #endif
 		)]
@@ -126,7 +126,7 @@ namespace Microsoft.Maui.DeviceTests
 		}
 
 		[Fact(DisplayName = "Semantic Hint is set correctly"
-#if __ANDROID__
+#if ANDROID
 			, Skip = "This value can't be validated through automated tests"
 #endif
 		)]
@@ -258,7 +258,7 @@ namespace Microsoft.Maui.DeviceTests
 
 
 		[Theory(DisplayName = "Native View Transforms are not empty"
-#if __IOS__
+#if IOS
 					, Skip = "https://github.com/dotnet/maui/issues/3600"
 #endif
 			)]
@@ -280,7 +280,7 @@ namespace Microsoft.Maui.DeviceTests
 		}
 
 		[Theory(DisplayName = "View Renders To Image"
-#if !__ANDROID__
+#if !ANDROID
 			, Skip = "iOS and Windows can't render elements to images from test runner. It's missing the required root windows."
 #endif
 			)]
