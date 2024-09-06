@@ -1,6 +1,7 @@
 ﻿#nullable disable
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.Maui.Graphics;
 using ObjCRuntime;
 using UIKit;
@@ -9,7 +10,7 @@ using SizeF = CoreGraphics.CGSize;
 
 namespace Microsoft.Maui.Platform
 {
-	public class MauiLabel : UILabel
+	public class MauiLabel : UILabel, IUIViewLifeCycleEvents
 	{
 		UIControlContentVerticalAlignment _verticalAlignment = UIControlContentVerticalAlignment.Center;
 
@@ -65,24 +66,6 @@ namespace Microsoft.Maui.Platform
 			return rect;
 		}
 
-		public override void InvalidateIntrinsicContentSize()
-		{
-			base.InvalidateIntrinsicContentSize();
-
-			if (Frame.Width == 0 && Frame.Height == 0)
-			{
-				// The Label hasn't actually been laid out on screen yet; no reason to request a layout
-				return;
-			}
-
-			if (!Frame.Size.IsCloseTo(AddInsets(IntrinsicContentSize), (nfloat)0.001))
-			{
-				// The text or its attributes have changed enough that the size no longer matches the set Frame. It's possible
-				// that the Label needs to be laid out again at a different size, so we request that the parent do so. 
-				Superview?.SetNeedsLayout();
-			}
-		}
-
 		public override SizeF SizeThatFits(SizeF size)
 		{
 			var requestedSize = base.SizeThatFits(size);
@@ -98,5 +81,19 @@ namespace Microsoft.Maui.Platform
 		SizeF AddInsets(SizeF size) => new SizeF(
 			width: size.Width + TextInsets.Left + TextInsets.Right,
 			height: size.Height + TextInsets.Top + TextInsets.Bottom);
+
+		[UnconditionalSuppressMessage("Memory", "MEM0002", Justification = IUIViewLifeCycleEvents.UnconditionalSuppressMessage)]
+		EventHandler _movedToWindow;
+		event EventHandler IUIViewLifeCycleEvents.MovedToWindow
+		{
+			add => _movedToWindow += value;
+			remove => _movedToWindow -= value;
+		}
+
+		public override void MovedToWindow()
+		{
+			base.MovedToWindow();
+			_movedToWindow?.Invoke(this, EventArgs.Empty);
+		}
 	}
 }

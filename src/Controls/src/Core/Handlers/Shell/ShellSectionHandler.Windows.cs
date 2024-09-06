@@ -12,6 +12,7 @@ namespace Microsoft.Maui.Controls.Handlers
 		public static PropertyMapper<ShellSection, ShellSectionHandler> Mapper =
 				new PropertyMapper<ShellSection, ShellSectionHandler>(ElementMapper)
 				{
+					[nameof(ShellSection.Title)] = MapTitle,
 					[nameof(ShellSection.CurrentItem)] = MapCurrentItem,
 				};
 
@@ -23,6 +24,7 @@ namespace Microsoft.Maui.Controls.Handlers
 				};
 
 		StackNavigationManager? _navigationManager;
+		WeakReference? _lastShell;
 
 		public ShellSectionHandler() : base(Mapper, CommandMapper)
 		{
@@ -32,6 +34,12 @@ namespace Microsoft.Maui.Controls.Handlers
 		{
 			_navigationManager = CreateNavigationManager();
 			return new WFrame();
+		}
+		public static void MapTitle(ShellSectionHandler handler, ShellSection item)
+		{
+			var shellItem = item.Parent as ShellItem;
+			var shellItemHandler = shellItem?.Handler as ShellItemHandler;
+			shellItemHandler?.UpdateTitle();
 		}
 
 		public static void MapCurrentItem(ShellSectionHandler handler, ShellSection item)
@@ -45,7 +53,12 @@ namespace Microsoft.Maui.Controls.Handlers
 			if (_shellSection != null)
 			{
 				((IShellSectionController)_shellSection).NavigationRequested -= OnNavigationRequested;
-				((IShellController)_shellSection.FindParentOfType<Shell>()!).RemoveAppearanceObserver(this);
+
+				if (_lastShell?.Target is IShellController shell)
+				{
+					shell.RemoveAppearanceObserver(this);
+				}
+				_lastShell = null;
 			}
 
 			// If we've already connected to the navigation manager
@@ -68,7 +81,13 @@ namespace Microsoft.Maui.Controls.Handlers
 			if (_shellSection != null)
 			{
 				((IShellSectionController)_shellSection).NavigationRequested += OnNavigationRequested;
-				((IShellController)_shellSection.FindParentOfType<Shell>()!).AddAppearanceObserver(this, _shellSection);
+
+				var shell = _shellSection.FindParentOfType<Shell>() as IShellController;
+				if (shell != null)
+				{
+					_lastShell = new WeakReference(shell);
+					shell.AddAppearanceObserver(this, _shellSection);
+				}
 			}
 		}
 
@@ -82,8 +101,11 @@ namespace Microsoft.Maui.Controls.Handlers
 			// Current Item might transition to null while visibility is adjusting on shell
 			// so we just ignore this and eventually when shell knows
 			// the next current item it will request to sync again
-			if (VirtualView.CurrentItem == null)
+			if (VirtualView.CurrentItem == null || MauiContext is null)
 				return;
+
+			// This is used to assign the ShellContentHandler to ShellContent
+			_ = VirtualView.CurrentItem.ToPlatform(MauiContext);
 
 			List<IView> pageStack = new List<IView>()
 			{

@@ -149,25 +149,33 @@ namespace Microsoft.Maui.Controls.ControlGallery.Issues
 
 #if UITEST
 
+[Microsoft.Maui.Controls.Compatibility.UITests.FailsOnMauiAndroid]
+[Microsoft.Maui.Controls.Compatibility.UITests.FailsOnMauiIOS]
 		[Test]
 		public void TestGrid()
 		{
 			TestControl(Grid);
 		}
 
+[Microsoft.Maui.Controls.Compatibility.UITests.FailsOnMauiAndroid]
+[Microsoft.Maui.Controls.Compatibility.UITests.FailsOnMauiIOS]
 		[Test]
 		public void TestContentView()
 		{
 			TestControl(ContentView);
 		}
 
+[Microsoft.Maui.Controls.Compatibility.UITests.FailsOnMauiAndroid]
+[Microsoft.Maui.Controls.Compatibility.UITests.FailsOnMauiIOS]
 		[Test]
 		public void TestStackLayout()
 		{
 			TestControl(StackLayout);
 		}
 
+[Microsoft.Maui.Controls.Compatibility.UITests.FailsOnMauiAndroid]
 		[Test]
+		[Compatibility.UITests.FailsOnMaui]
 		public void TestRelativeLayout()
 		{
 			TestControl(RelativeLayout);

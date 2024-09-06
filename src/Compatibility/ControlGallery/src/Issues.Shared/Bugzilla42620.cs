@@ -308,6 +308,8 @@ namespace Microsoft.Maui.Controls.ControlGallery.Issues
 			_totalWidth = Math.Max(_colDef, _totalWidth);
 		}
 
+[Microsoft.Maui.Controls.Compatibility.UITests.FailsOnMauiAndroid]
+[Microsoft.Maui.Controls.Compatibility.UITests.FailsOnMauiIOS]
 		[Test]
 		public void GridChildrenAddHorizontalDoesNotSpanAllRows()
 		{

@@ -102,11 +102,10 @@ namespace Microsoft.Maui.Controls
 
 		protected override Size MeasureOverride(double widthConstraint, double heightConstraint)
 		{
-			DesiredSize = this.ComputeDesiredSize(widthConstraint, heightConstraint);
-			return DesiredSize;
+			return this.ComputeDesiredSize(widthConstraint, heightConstraint);
 		}
 
-		Size IContentView.CrossPlatformMeasure(double widthConstraint, double heightConstraint)
+		Size ICrossPlatformLayout.CrossPlatformMeasure(double widthConstraint, double heightConstraint)
 		{
 			return this.MeasureContent(widthConstraint, heightConstraint);
 		}
@@ -118,7 +117,7 @@ namespace Microsoft.Maui.Controls
 			return Frame.Size;
 		}
 
-		Size IContentView.CrossPlatformArrange(Rect bounds)
+		Size ICrossPlatformLayout.CrossPlatformArrange(Rect bounds)
 		{
 			this.ArrangeContent(bounds);
 			return bounds.Size;

@@ -33,17 +33,6 @@ namespace Microsoft.Maui.Controls.ControlGallery
 	}
 
 	[Preserve(AllMembers = true)]
-	internal class CoreCarouselPage : CarouselPage
-	{
-		public CoreCarouselPage()
-		{
-			AutomationId = "CarouselPageRoot";
-			Children.Add(new CoreRootPage(this, NavigationBehavior.PushModalAsync) { Title = "Page 1" });
-			Children.Add(new CoreRootPage(this, NavigationBehavior.PushModalAsync) { Title = "Page 2" });
-		}
-	}
-
-	[Preserve(AllMembers = true)]
 	internal class CoreContentPage : ContentPage
 	{
 		public CoreRootView CoreRootView { get; }
@@ -231,7 +220,6 @@ namespace Microsoft.Maui.Controls.ControlGallery
 		{
 			var roots = new[] {
 				new CoreViewContainer ("SwapRoot - Tests", typeof(PlatformTestsConsole)),
-				new CoreViewContainer ("SwapRoot - CarouselPage", typeof(CoreCarouselPage)),
 				new CoreViewContainer ("SwapRoot - ContentPage", typeof(CoreContentPage)),
 				new CoreViewContainer ("SwapRoot - FlyoutPage", typeof(CoreFlyoutPage)),
 				new CoreViewContainer ("SwapRoot - NavigationPage", typeof(CoreNavigationPage)),
@@ -331,7 +319,6 @@ namespace Microsoft.Maui.Controls.ControlGallery
 				new GalleryPageFactory(() => new PanGestureGalleryPage(), "Pan gesture Gallery"),
 				new GalleryPageFactory(() => new SwipeGestureGalleryPage(), "Swipe gesture Gallery"),
 				new GalleryPageFactory(() => new PinchGestureTestPage(), "Pinch gesture Gallery"),
-				new GalleryPageFactory(() => new ClickGestureGalleryPage(), "Click gesture Gallery"),
 				new GalleryPageFactory(() => new AutomationIdGallery(), "AutomationID Gallery"),
 				new GalleryPageFactory(() => new LayoutPerformanceGallery(), "Layout Perf Gallery"),
 				new GalleryPageFactory(() => new ListViewSelectionColor(), "ListView SelectionColor Gallery"),
@@ -346,9 +333,7 @@ namespace Microsoft.Maui.Controls.ControlGallery
 				new GalleryPageFactory(() => new CoreBoxViewGalleryPage(), "BoxView Gallery"),
 				new GalleryPageFactory(() => new ButtonCoreGalleryPage(), "Button Gallery"),
 				new GalleryPageFactory(() => new ButtonLayoutGalleryPage(), "Button Layout Gallery"),
-				new GalleryPageFactory(() => new ButtonLayoutGalleryPage(VisualMarker.Material), "Button Layout Gallery (Material)"),
 				new GalleryPageFactory(() => new ButtonBorderBackgroundGalleryPage(), "Button Border & Background Gallery"),
-				new GalleryPageFactory(() => new ButtonBorderBackgroundGalleryPage(VisualMarker.Material), "Button Border & Background Gallery (Material)"),
 				new GalleryPageFactory(() => new CheckBoxCoreGalleryPage(), "CheckBox Gallery"),
 				new GalleryPageFactory(() => new DatePickerCoreGalleryPage(), "DatePicker Gallery"),
 				new GalleryPageFactory(() => new DragAndDropGallery(), "Drag and Drop Gallery"),
@@ -391,7 +376,6 @@ namespace Microsoft.Maui.Controls.ControlGallery
 				new GalleryPageFactory(() => new BoundContentPage(), "BoundPage Gallery - Legacy"),
 				new GalleryPageFactory(() => new BackgroundImageGallery(), "BackgroundImage gallery"),
 				new GalleryPageFactory(() => new ButtonGallery(), "Button Gallery - Legacy"),
-				new GalleryPageFactory(() => new CarouselPageGallery(), "CarouselPage Gallery - Legacy"),
 				new GalleryPageFactory(() => new CellTypesListPage(), "Cells Gallery - Legacy"),
 				new GalleryPageFactory(() => new ClipToBoundsGallery(), "ClipToBounds Gallery - Legacy"),
 				new GalleryPageFactory(() => new ControlTemplatePage(), "ControlTemplated Gallery - Legacy"),
@@ -434,7 +418,6 @@ namespace Microsoft.Maui.Controls.ControlGallery
 				new GalleryPageFactory(() => new StyleXamlGallery(), "Style Gallery in Xaml"),
 				new GalleryPageFactory(() => new SwitchGallery(), "Switch Gallery - Legacy"),
 				new GalleryPageFactory(() => new TableViewGallery(), "TableView Gallery - Legacy"),
-				new GalleryPageFactory(() => new TemplatedCarouselGallery(), "TemplatedCarouselPage Gallery - Legacy"),
 				new GalleryPageFactory(() => new TemplatedTabbedGallery(), "TemplatedTabbedPage Gallery - Legacy"),
 				new GalleryPageFactory(() => new UnevenViewCellGallery(), "UnevenViewCell Gallery - Legacy"),
 				new GalleryPageFactory(() => new UnevenListGallery(), "UnevenList Gallery - Legacy"),

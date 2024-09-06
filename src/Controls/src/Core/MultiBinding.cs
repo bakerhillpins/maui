@@ -60,7 +60,7 @@ namespace Microsoft.Maui.Controls
 			foreach (var b in Bindings)
 				bindingsclone.Add(b.Clone());
 
-			return new MultiBinding()
+			var clone = new MultiBinding()
 			{
 				Converter = Converter,
 				ConverterParameter = ConverterParameter,
@@ -70,6 +70,11 @@ namespace Microsoft.Maui.Controls
 				TargetNullValue = TargetNullValue,
 				StringFormat = StringFormat,
 			};
+
+			if (VisualDiagnostics.IsEnabled && VisualDiagnostics.GetSourceInfo(this) is SourceInfo info)
+				VisualDiagnostics.RegisterSourceInfo(clone, info.SourceUri, info.LineNumber, info.LinePosition);
+
+			return clone;
 		}
 
 		internal override void Apply(bool fromTarget)
@@ -88,10 +93,10 @@ namespace Microsoft.Maui.Controls
 			if (!fromTarget && this.GetRealizedMode(_targetProperty) == BindingMode.OneWayToSource)
 				return;
 
-			this.ApplyCore( fromTarget );
+			ApplyCore(fromTarget);
 		}
 
-		internal override void Apply(object context, BindableObject targetObject, BindableProperty targetProperty, bool fromBindingContextChanged = false)
+		internal override void Apply(object context, BindableObject targetObject, BindableProperty targetProperty, bool fromBindingContextChanged, SetterSpecificity specificity)
 		{
 			if (_bindings == null)
 				throw new InvalidOperationException("Bindings is null");
@@ -101,7 +106,7 @@ namespace Microsoft.Maui.Controls
 
 			context = Context ?? context;
 
-			base.Apply(context, targetObject, targetProperty, fromBindingContextChanged);
+			base.Apply(context, targetObject, targetProperty, fromBindingContextChanged, specificity);
 
 			_applying = true;
 			if (!ReferenceEquals(_targetObject, targetObject))
@@ -153,7 +158,7 @@ namespace Microsoft.Maui.Controls
 		internal override object GetSourceValue(object value, BindableObject bindObj, BindableProperty targetProperty)
 		{
 			var valuearray = value as object[];
-			if ( valuearray != null && Converter != null )
+			if (valuearray != null && Converter != null)
 			{
 				value = Converter.Convert(valuearray, targetProperty.ReturnType, ConverterParameter, CultureInfo.CurrentUICulture);
 
@@ -217,7 +222,7 @@ namespace Microsoft.Maui.Controls
 					{
 						if (ReferenceEquals(values[i], Binding.DoNothing) || ReferenceEquals(values[i], BindableProperty.UnsetValue))
 							continue;
-						_proxyObject.SetValueCore(_bpProxies[i], values[i], SetValueFlags.None);
+						_proxyObject.SetValueCore(_bpProxies[i], values[i], SetValueFlags.None, BindableObject.SetValuePrivateFlags.None);
 					}
 				}
 				finally
@@ -245,6 +250,7 @@ namespace Microsoft.Maui.Controls
 
 				_bpProxies = null;
 				_proxyObject = null;
+				_targetObject = null;
 			}
 
 			base.Unapply(fromBindingContextChanged: fromBindingContextChanged);

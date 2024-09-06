@@ -388,7 +388,7 @@ namespace Microsoft.Maui.Platform
 				mode = MeasureSpecMode.Exactly;
 				constraint = explicitSize;
 			}
-			else if (IsMaximumSet(maximumSize))
+			else if (IsMaximumSet(maximumSize) && maximumSize < constraint)
 			{
 				mode = MeasureSpecMode.AtMost;
 				constraint = maximumSize;
@@ -406,8 +406,12 @@ namespace Microsoft.Maui.Platform
 			return mode.MakeMeasureSpec(deviceConstraint);
 		}
 
-		public static float GetDisplayDensity(this Context? context) =>
-			context?.Resources?.DisplayMetrics?.Density ?? 1.0f;
+		public static float GetDisplayDensity(this Context? context)
+		{
+			EnsureMetrics(context);
+
+			return s_displayDensity;
+		}
 
 		public static Rect ToCrossPlatformRectInReferenceFrame(this Context context, int left, int top, int right, int bottom)
 		{

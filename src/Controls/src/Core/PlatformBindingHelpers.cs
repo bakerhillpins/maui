@@ -90,12 +90,12 @@ namespace Microsoft.Maui.Controls.Internals
 			BindableObjectProxy<TPlatformView> proxy;
 			if (!BindableObjectProxy<TPlatformView>.BindableObjectProxies.TryGetValue(target, out proxy))
 				return;
-			SetValueFromRenderer(proxy, bindableProperty, target.GetType().GetProperty(targetProperty)?.GetMethod.Invoke(target, new object[] { }));
+			SetValueFromRenderer(proxy, bindableProperty, target.GetType().GetProperty(targetProperty)?.GetMethod.Invoke(target, Array.Empty<object>()));
 		}
 
 		static void SetValueFromRenderer(BindableObject bindable, BindableProperty property, object value)
 		{
-			bindable.SetValueCore(property, value);
+			bindable.SetValue(property, value);
 		}
 
 		public static void SetBinding<TPlatformView>(TPlatformView target, BindableProperty targetProperty, BindingBase binding) where TPlatformView : class

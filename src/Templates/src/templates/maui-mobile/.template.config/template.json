@@ -1,7 +1,7 @@
 {
     "$schema": "http://json.schemastore.org/template",
     "author": "Microsoft",
-    "classifications": [ "MAUI", "Android", "iOS", "macOS", "Mac Catalyst", "Windows", "Tizen" ],
+    "classifications": [ "MAUI", "Android", "iOS", "macOS", "Mac Catalyst", "Windows", "Tizen", "Mobile" ],
     "identity": "Microsoft.Maui.MauiApp.CSharp.DOTNET_TFM_VERSION_VALUE",
     "groupIdentity": "Microsoft.Maui.App",
     "precedence": "DOTNET_TFM_VERSION_MAJOR_VALUE",
@@ -21,6 +21,9 @@
       {
         "condition": "(HostIdentifier != \"dotnetcli\" && HostIdentifier != \"dotnetcli-preview\")",
         "path": "MainPage.xaml"
+      },
+      {
+        "path": "MauiApp.1.csproj"
       }
     ],
     "postActions": [
@@ -53,11 +56,11 @@
         "description": "Overrides the $(ApplicationId) in the project",
         "datatype": "string"
       },
-      "msExtensionsVersion": {
+      "msExtensionsLoggingDebugVersion": {
         "type": "parameter",
         "dataType": "string",
-        "replaces": "MS_EXT_VERSION",
-        "defaultValue": "MS_EXT_VERSION_VALUE"
+        "replaces": "MS_EXT_LOG_DEBUG_VERSION",
+        "defaultValue": "MS_EXT_LOG_DEBUG_VERSION_VALUE"
       },
       "Framework": {
         "type": "parameter",
@@ -89,6 +92,26 @@
           "toLower": true
         }
       },
+      "nameToAppId": {
+        "type": "generated",
+        "generator": "regex",
+        "dataType": "string",
+        "parameters": {
+          "source": "nameToLower",
+          "steps": [
+            {
+              "regex": "[^a-z0-9_\\.]",
+              "replacement": ""
+            }
+          ]
+        }
+      },
+      "XmlEncodedAppNameParam": {
+        "type": "derived",
+        "valueSource": "name",
+        "valueTransform": "encode",
+        "replaces": "XmlEncodedAppName"
+      },
       "defaultAppId":{
         "type": "generated",
         "generator": "join",
@@ -100,7 +123,7 @@
             },
             {
               "type": "ref",
-              "value": "nameToLower"
+              "value": "nameToAppId"
             }
           ]
         }
@@ -113,6 +136,11 @@
           "fallbackVariableName": "defaultAppId"
         },
         "replaces": "com.companyname.mauiapp"
+      }
+    },
+    "forms": {
+      "encode": {
+        "identifier": "xmlEncode"
       }
     },
     "defaultName": "MauiApp1"

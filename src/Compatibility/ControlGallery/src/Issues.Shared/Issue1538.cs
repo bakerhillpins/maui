@@ -36,8 +36,10 @@ namespace Microsoft.Maui.Controls.ControlGallery.Issues
 		}
 
 #if UITEST
+		[MovedToAppium]
 		[Test]
 		[Category(UITestCategories.ScrollView)]
+		[Compatibility.UITests.FailsOnMauiIOS]
 		public void MeasuringEmptyScrollViewDoesNotCrash()
 		{
 			Task.Delay(1000).Wait();

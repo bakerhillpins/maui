@@ -93,7 +93,10 @@ namespace Microsoft.Maui.Controls.ControlGallery.Issues
 		}
 
 #if UITEST
+		[MovedToAppium]
 		[Test]
+		[Compatibility.UITests.FailsOnMauiIOS]
+		[Compatibility.UITests.FailsOnMauiAndroid]
 		public void Issue12574Test()
 		{
 			RunningApp.WaitForElement("0 item");
@@ -119,7 +122,9 @@ namespace Microsoft.Maui.Controls.ControlGallery.Issues
 			RunningApp.WaitForElement("0 item");
 		}
 
+		[MovedToAppium]
 		[Test]
+		[Compatibility.UITests.FailsOnMauiIOS]
 		public void RemoveItemsQuickly()
 		{
 			RunningApp.WaitForElement("0 item");

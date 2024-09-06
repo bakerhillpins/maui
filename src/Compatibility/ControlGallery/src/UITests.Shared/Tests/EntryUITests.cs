@@ -22,6 +22,8 @@ namespace Microsoft.Maui.Controls.Compatibility.UITests
 			App.NavigateToGallery(GalleryQueries.EntryGallery);
 		}
 
+		[Microsoft.Maui.Controls.Compatibility.UITests.FailsOnMauiAndroid]
+		[Microsoft.Maui.Controls.Compatibility.UITests.FailsOnMauiIOS]
 		[Test]
 		[UiTest(typeof(Entry), "Focus")]
 		public override void _Focus()

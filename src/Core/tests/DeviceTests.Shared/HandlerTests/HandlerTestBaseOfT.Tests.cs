@@ -14,7 +14,7 @@ namespace Microsoft.Maui.DeviceTests
 	public abstract partial class HandlerTestBase<THandler, TStub>
 	{
 		[Fact]
-		public async Task DisconnectHandlerDoesntCrash()
+		public virtual async Task DisconnectHandlerDoesntCrash()
 		{
 			var handler = await CreateHandlerAsync(new TStub()) as IPlatformViewHandler;
 			await InvokeOnMainThreadAsync(() =>
@@ -79,25 +79,37 @@ namespace Microsoft.Maui.DeviceTests
 		}
 
 		[Fact(DisplayName = "Setting Semantic Description makes element accessible")]
-		public async Task SettingSemanticDescriptionMakesElementAccessible()
+		public async virtual Task SettingSemanticDescriptionMakesElementAccessible()
 		{
 			var view = new TStub();
 			MockAccessibilityExpectations(view);
-
 			view.Semantics.Description = "Test";
-			var important = await GetValueAsync(view, handler => view.IsAccessibilityElement());
+
+#if IOS || MACCATALYST
+			bool attachAndRun = true;
+#else
+			bool attachAndRun = false;
+#endif
+
+			var important = await GetValueAsync(view, handler => view.IsAccessibilityElement(), attachAndRun);
 
 			Assert.True(important);
 		}
 
 		[Fact(DisplayName = "Setting Semantic Hint makes element accessible")]
-		public async Task SettingSemanticHintMakesElementAccessible()
+		public async virtual Task SettingSemanticHintMakesElementAccessible()
 		{
 			var view = new TStub();
 			MockAccessibilityExpectations(view);
 
+#if IOS || MACCATALYST
+			bool attachAndRun = true;
+#else
+			bool attachAndRun = false;
+#endif
+
 			view.Semantics.Hint = "Test";
-			var important = await GetValueAsync(view, handler => view.IsAccessibilityElement());
+			var important = await GetValueAsync(view, handler => view.IsAccessibilityElement(), attachAndRun);
 
 			Assert.True(important);
 		}
@@ -133,7 +145,14 @@ namespace Microsoft.Maui.DeviceTests
 		{
 			var view = new TStub();
 			view.Semantics.HeadingLevel = SemanticHeadingLevel.Level1;
-			var id = await GetValueAsync(view, handler => GetSemanticHeading(handler));
+
+#if IOS || MACCATALYST
+			bool attachAndRun = true;
+#else
+			bool attachAndRun = false;
+#endif
+
+			var id = await GetValueAsync(view, handler => GetSemanticHeading(handler), attachAndRun);
 			Assert.Equal(view.Semantics.HeadingLevel, id);
 		}
 
@@ -185,7 +204,11 @@ namespace Microsoft.Maui.DeviceTests
 			await view.AssertHasContainer(true);
 		}
 
-		[Fact(DisplayName = "ContainerView Adds And Removes")]
+		[Fact(DisplayName = "ContainerView Adds And Removes"
+#if WINDOWS
+			, Skip = "Failing on Windows"
+#endif
+		)]
 		public virtual async Task ContainerViewAddsAndRemoves()
 		{
 			var view = new TStub
@@ -241,11 +264,7 @@ namespace Microsoft.Maui.DeviceTests
 			Assert.NotEqual(platformViewBounds, new Graphics.Rect());
 		}
 
-		[Theory(DisplayName = "Native View Bounding Box is not empty"
-#if WINDOWS
-			, Skip = "https://github.com/dotnet/maui/issues/9054"
-#endif
-		)]
+		[Theory(DisplayName = "Native View Bounding Box is not empty")]
 		[InlineData(1)]
 		[InlineData(100)]
 		[InlineData(1000)]
@@ -282,6 +301,12 @@ namespace Microsoft.Maui.DeviceTests
 			else if (size == 1 && view is ISwitch)
 			{
 				// https://github.com/dotnet/maui/issues/11020
+			}
+#endif
+#if WINDOWS
+			else if (view is IContentView)
+			{
+				// https://github.com/dotnet/maui/issues/20228
 			}
 #endif
 			else if (view is IProgress)

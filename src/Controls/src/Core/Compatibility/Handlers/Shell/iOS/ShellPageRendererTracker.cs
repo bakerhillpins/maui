@@ -89,6 +89,8 @@ namespace Microsoft.Maui.Controls.Platform.Compatibility
 		{
 			if (e.Is(VisualElement.FlowDirectionProperty))
 				UpdateFlowDirection();
+			else if (e.Is(Shell.FlyoutIconProperty))
+				UpdateLeftToolbarItems();
 		}
 
 		protected virtual void OnBackButtonBehaviorPropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -302,7 +304,7 @@ namespace Microsoft.Maui.Controls.Platform.Compatibility
 					primaries.Reverse();
 			}
 
-			NavigationItem.SetRightBarButtonItems(primaries == null ? new UIBarButtonItem[0] : primaries.ToArray(), false);
+			NavigationItem.SetRightBarButtonItems(primaries == null ? Array.Empty<UIBarButtonItem>() : primaries.ToArray(), false);
 
 			UpdateLeftToolbarItems();
 		}
@@ -325,6 +327,7 @@ namespace Microsoft.Maui.Controls.Platform.Compatibility
 			if (!IsRootPage)
 			{
 				NavigationItem.HidesBackButton = !backButtonVisible;
+				image = backButtonVisible ? image : null;
 			}
 
 			image.LoadImage(MauiContext, result =>
@@ -356,7 +359,10 @@ namespace Microsoft.Maui.Controls.Platform.Compatibility
 					if (String.IsNullOrWhiteSpace(image?.AutomationId))
 					{
 						if (IsRootPage)
+						{
 							NavigationItem.LeftBarButtonItem.AccessibilityIdentifier = "OK";
+							NavigationItem.LeftBarButtonItem.AccessibilityLabel = "Menu";
+						}
 						else
 							NavigationItem.LeftBarButtonItem.AccessibilityIdentifier = "Back";
 					}
@@ -535,11 +541,7 @@ namespace Microsoft.Maui.Controls.Platform.Compatibility
 
 			public override void LayoutSubviews()
 			{
-				if (Height == null || Height == 0)
-				{
-					UpdateFrame(Superview);
-				}
-
+				UpdateFrame(Superview);
 				base.LayoutSubviews();
 			}
 
@@ -553,9 +555,6 @@ namespace Microsoft.Maui.Controls.Platform.Compatibility
 			{
 				if (newSuper is not null && newSuper.Bounds != CGRect.Empty)
 				{
-					if (!(OperatingSystem.IsIOSVersionAtLeast(11) || OperatingSystem.IsTvOSVersionAtLeast(11)))
-						Frame = new CGRect(Frame.X, newSuper.Bounds.Y, Frame.Width, newSuper.Bounds.Height);
-
 					Height = newSuper.Bounds.Height;
 				}
 			}
@@ -709,7 +708,7 @@ namespace Microsoft.Maui.Controls.Platform.Compatibility
 
 			_searchController.SetSearchResultsUpdater(sc =>
 			{
-				SearchHandler.SetValueCore(SearchHandler.QueryProperty, sc.SearchBar.Text);
+				SearchHandler.SetValue(SearchHandler.QueryProperty, sc.SearchBar.Text);
 			});
 
 			searchBar.BookmarkButtonClicked += BookmarkButtonClicked;
@@ -800,6 +799,13 @@ namespace Microsoft.Maui.Controls.Platform.Compatibility
 			if (sender is Page page)
 				page.Loaded -= OnPageLoaded;
 
+			// This means the user removed this page during the loaded event
+			if (_page is null)
+			{
+				SetDisappeared();
+				return;
+			}
+
 			UpdateToolbarItemsInternal();
 			CheckAppeared();
 		}
@@ -838,7 +844,11 @@ namespace Microsoft.Maui.Controls.Platform.Compatibility
 
 			_isVisiblePage = false;
 
-			if (_context.Shell.Toolbar != null)
+			// This will only be null if the user removes a shell page
+			// while that shell page is loading.
+			// When that happens this control will dispose and these
+			// events will be cleaned up there
+			if (_context?.Shell?.Toolbar is not null)
 				_context.Shell.Toolbar.PropertyChanged -= OnToolbarPropertyChanged;
 		}
 

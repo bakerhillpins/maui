@@ -194,7 +194,7 @@ namespace Microsoft.Maui.Controls.Core.UnitTests
 			{
 				await shell.Navigation.PopToRootAsync();
 				await source.Task;
-				Assert.Equal(1, shell.Navigation.NavigationStack.Count);
+				Assert.Single(shell.Navigation.NavigationStack);
 			}
 		}
 
@@ -682,7 +682,7 @@ namespace Microsoft.Maui.Controls.Core.UnitTests
 
 			Routing.RegisterRoute("catdetails", typeof(ContentPage));
 
-			Assert.ThrowsAnyAsync<Exception>(async () => await shell.GoToAsync($"//catdetails"));
+			await Assert.ThrowsAnyAsync<Exception>(async () => await shell.GoToAsync($"//catdetails"));
 		}
 
 		[Fact]

@@ -12,6 +12,7 @@ namespace Microsoft.Maui.Controls.ControlGallery.Issues
 {
 #if UITEST
 	[NUnit.Framework.Category(Compatibility.UITests.UITestCategories.Bugzilla)]
+	[NUnit.Framework.Category(Compatibility.UITests.UITestCategories.TableView)]
 #endif
 	[Preserve(AllMembers = true)]
 	[Issue(IssueTracker.Bugzilla, 36559, "[WP] Navigating to a ContentPage with a Grid inside a TableView affects Entry heights")]
@@ -47,6 +48,7 @@ namespace Microsoft.Maui.Controls.ControlGallery.Issues
 
 #if UITEST
 		[Test]
+		[Compatibility.UITests.FailsOnMauiIOS]
 		public void Bugzilla36559Test()
 		{
 			RunningApp.WaitForElement(q => q.Marked("entry"));

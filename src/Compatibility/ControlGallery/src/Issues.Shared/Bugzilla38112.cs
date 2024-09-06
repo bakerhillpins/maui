@@ -11,6 +11,7 @@ namespace Microsoft.Maui.Controls.ControlGallery.Issues
 {
 #if UITEST
 	[NUnit.Framework.Category(Compatibility.UITests.UITestCategories.Bugzilla)]
+	[NUnit.Framework.Category(Compatibility.UITests.UITestCategories.TableView)]
 #endif
 	[Preserve(AllMembers = true)]
 	[Issue(IssueTracker.Bugzilla, 38112, "Switch becomes reenabled when previous ViewCell is removed from TableView", PlatformAffected.Android)]
@@ -88,6 +89,7 @@ namespace Microsoft.Maui.Controls.ControlGallery.Issues
 
 #if UITEST
 		[Test]
+		[Compatibility.UITests.FailsOnMauiIOS]
 		public void Bugzilla38112_SwitchIsStillOnScreen ()
 		{
 			RunningApp.WaitForElement (q => q.Marked ("Click"));
@@ -96,6 +98,7 @@ namespace Microsoft.Maui.Controls.ControlGallery.Issues
 		}
 
 		[Test]
+		[Compatibility.UITests.FailsOnMauiIOS]
 		public void Bugzilla38112_SwitchIsStillDisabled ()
 		{
 			RunningApp.WaitForElement (q => q.Marked ("Click"));

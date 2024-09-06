@@ -10,12 +10,27 @@ namespace Microsoft.Maui.Platform
 		internal static UITextField? GetSearchTextField(this UISearchBar searchBar)
 		{
 			if (OperatingSystem.IsIOSVersionAtLeast(13))
+			{
 				return searchBar.SearchTextField;
-			else
-				return searchBar.GetSearchTextField();
+			}
+
+			// Search Subviews up to two levels deep
+			// https://stackoverflow.com/a/58056700
+			foreach (var child in searchBar.Subviews)
+			{
+				if (child is UITextField childTextField)
+					return childTextField;
+
+				foreach (var grandChild in child.Subviews)
+				{
+					if (grandChild is UITextField grandChildTextField)
+						return grandChildTextField;
+				}
+			}
+
+			return null;
 		}
 
-		// TODO: NET8 maybe make this public?
 		internal static void UpdateBackground(this UISearchBar uiSearchBar, ISearchBar searchBar)
 		{
 			var background = searchBar.Background;
@@ -125,6 +140,9 @@ namespace Microsoft.Maui.Platform
 				cancelButton.SetTitleColor(searchBar.CancelButtonColor.ToPlatform(), UIControlState.Normal);
 				cancelButton.SetTitleColor(searchBar.CancelButtonColor.ToPlatform(), UIControlState.Highlighted);
 				cancelButton.SetTitleColor(searchBar.CancelButtonColor.ToPlatform(), UIControlState.Disabled);
+
+				if (cancelButton.TraitCollection.UserInterfaceIdiom == UIUserInterfaceIdiom.Mac)
+					cancelButton.TintColor = searchBar.CancelButtonColor.ToPlatform();
 			}
 		}
 
@@ -141,6 +159,19 @@ namespace Microsoft.Maui.Platform
 				textField.AutocorrectionType = UITextAutocorrectionType.No;
 		}
 
+		public static void UpdateIsSpellCheckEnabled(this UISearchBar uiSearchBar, ISearchBar searchBar, UITextField? textField = null)
+		{
+			textField ??= uiSearchBar.GetSearchTextField();
+
+			if (textField == null)
+				return;
+
+			if (searchBar.IsSpellCheckEnabled)
+				textField.SpellCheckingType = UITextSpellCheckingType.Yes;
+			else
+				textField.SpellCheckingType = UITextSpellCheckingType.No;
+		}
+
 		public static void UpdateKeyboard(this UISearchBar uiSearchBar, ISearchBar searchBar)
 		{
 			var keyboard = searchBar.Keyboard;
@@ -148,7 +179,10 @@ namespace Microsoft.Maui.Platform
 			uiSearchBar.ApplyKeyboard(keyboard);
 
 			if (keyboard is not CustomKeyboard)
+			{
 				uiSearchBar.UpdateIsTextPredictionEnabled(searchBar);
+				uiSearchBar.UpdateIsSpellCheckEnabled(searchBar);
+			}
 
 			uiSearchBar.ReloadInputViews();
 		}

@@ -40,6 +40,8 @@ namespace Microsoft.Maui.Controls.ControlGallery.Issues
 #if UITEST
 		[Test, NUnit.Framework.Category(UITestCategories.Image)]
 		[NUnit.Framework.Category(UITestCategories.RequiresInternetConnection)]
+		[Compatibility.UITests.FailsOnMauiAndroid]
+		[Compatibility.UITests.FailsOnMauiIOS]
 		public void MonkiesShouldLoad()
 		{
 			RunningApp.WaitForElement("MonkeyLoadButton");

@@ -10,7 +10,7 @@ namespace Microsoft.Maui.Handlers
 {
 	public partial class ApplicationHandler : ElementHandler<IApplication, IUIApplicationDelegate>
 	{
-		public static void MapTerminate(ApplicationHandler handler, IApplication application, object? args)
+		public static partial void MapTerminate(ApplicationHandler handler, IApplication application, object? args)
 		{
 #if __MACCATALYST__
 			NSApplication.SharedApplication.Terminate();
@@ -21,14 +21,14 @@ namespace Microsoft.Maui.Handlers
 
 		[SupportedOSPlatform("ios13.0")]
 		[SupportedOSPlatform("tvos13.0")]
-		public static void MapOpenWindow(ApplicationHandler handler, IApplication application, object? args)
+		public static partial void MapOpenWindow(ApplicationHandler handler, IApplication application, object? args)
 		{
 			handler.PlatformView?.RequestNewWindow(application, args as OpenWindowRequest);
 		}
 
 		[SupportedOSPlatform("ios13.0")]
 		[SupportedOSPlatform("tvos13.0")]
-		public static void MapCloseWindow(ApplicationHandler handler, IApplication application, object? args)
+		public static partial void MapCloseWindow(ApplicationHandler handler, IApplication application, object? args)
 		{
 			if (args is IWindow window)
 			{
@@ -42,6 +42,11 @@ namespace Microsoft.Maui.Handlers
 					UIApplication.SharedApplication.RequestSceneSessionDestruction(sceneSession, null, null);
 				}
 			}
+		}
+
+		internal static partial void MapAppTheme(ApplicationHandler handler, IApplication application)
+		{
+			application?.UpdateUserInterfaceStyle();
 		}
 
 #if __MACCATALYST__

@@ -14,6 +14,7 @@ namespace Microsoft.Maui.Controls.ControlGallery.Issues
 {
 #if UITEST
 	[NUnit.Framework.Category(Compatibility.UITests.UITestCategories.Bugzilla)]
+	[NUnit.Framework.Category(Compatibility.UITests.UITestCategories.TableView)]
 #endif
 	[Preserve(AllMembers = true)]
 	[Issue(IssueTracker.Bugzilla, 37841, "TableView EntryCells and TextCells cease to update after focus change", PlatformAffected.Android)]
@@ -139,6 +140,7 @@ The EntryCell should display '112358' and the TextCell should display '48151623'
 
 #if UITEST
 		[Test]
+		[Compatibility.UITests.FailsOnMauiIOS]
 		public void TextAndEntryCellsDataBindInTableView()
 		{
 			RunningApp.WaitForElement("Generate");

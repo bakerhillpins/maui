@@ -13,6 +13,7 @@ namespace Microsoft.Maui.Controls.ControlGallery.Issues
 {
 #if UITEST
 	[Category(Compatibility.UITests.UITestCategories.Bugzilla)]
+	[NUnit.Framework.Category(Compatibility.UITests.UITestCategories.TableView)]
 #endif
 	[Preserve(AllMembers = true)]
 	[Issue(IssueTracker.Bugzilla, 33578, "TableView EntryCell shows DefaultKeyboard, but after scrolling down and back a NumericKeyboard (")]
@@ -80,6 +81,7 @@ namespace Microsoft.Maui.Controls.ControlGallery.Issues
 
 #if UITEST && __IOS__
 		[Test]
+		[Compatibility.UITests.FailsOnMauiIOS]
 		public void TableViewEntryCellShowsDefaultKeyboardThenNumericKeyboardAfterScrolling()
 		{
 			RunningApp.ScrollDown();

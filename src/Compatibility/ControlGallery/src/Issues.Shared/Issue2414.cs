@@ -14,6 +14,7 @@ namespace Microsoft.Maui.Controls.ControlGallery.Issues
 #if UITEST
 	[NUnit.Framework.Category(Compatibility.UITests.UITestCategories.Github5000)]
 	[NUnit.Framework.Category(Compatibility.UITests.UITestCategories.UwpIgnore)]
+	[NUnit.Framework.Category(Compatibility.UITests.UITestCategories.TableView)]
 #endif
 	[Preserve(AllMembers = true)]
 	[Issue(IssueTracker.Github, 2414, "NullReferenceException when swiping over Context Actions", PlatformAffected.WinPhone)]
@@ -63,6 +64,7 @@ namespace Microsoft.Maui.Controls.ControlGallery.Issues
 #if UITEST
 		[Test]
 		[NUnit.Framework.Category(Compatibility.UITests.UITestCategories.UwpIgnore)]
+		[Compatibility.UITests.FailsOnMauiIOS]
 		public void TestDoesntCrashShowingContextMenu()
 		{
 			RunningApp.ActivateContextMenu("Swipe ME");
@@ -72,6 +74,7 @@ namespace Microsoft.Maui.Controls.ControlGallery.Issues
 		}
 
 		[Test]
+		[Compatibility.UITests.FailsOnMauiIOS]
 		public void TestShowContextMenuItemsInTheRightOrder()
 		{
 			RunningApp.ActivateContextMenu("Swipe ME");

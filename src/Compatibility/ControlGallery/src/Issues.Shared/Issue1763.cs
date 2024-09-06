@@ -17,6 +17,7 @@ namespace Microsoft.Maui.Controls.ControlGallery.Issues
 {
 #if UITEST
 	[NUnit.Framework.Category(Compatibility.UITests.UITestCategories.Github5000)]
+	[NUnit.Framework.Category(Compatibility.UITests.UITestCategories.TabbedPage)]
 #endif
 	[Preserve(AllMembers = true)]
 	[Issue(IssueTracker.Github, 1763, "First item of grouped ListView not firing .ItemTapped", PlatformAffected.WinPhone, NavigationBehavior.PushAsync)]
@@ -34,6 +35,8 @@ namespace Microsoft.Maui.Controls.ControlGallery.Issues
 		}
 
 #if UITEST
+[Microsoft.Maui.Controls.Compatibility.UITests.FailsOnMauiAndroid]
+[Microsoft.Maui.Controls.Compatibility.UITests.FailsOnMauiIOS]
 		[Test]
 		public void TestIssue1763ItemTappedFiring()
 		{

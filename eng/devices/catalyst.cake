@@ -1,97 +1,196 @@
-#addin nuget:?package=Cake.AppleSimulator&version=0.2.0
-#load "../cake/helpers.cake"
+#load "./uitests-shared.cake"
 
-string TARGET = Argument("target", "Test");
+// Argument handling
+string DEFAULT_MAC_PROJECT = "../../src/Controls/tests/TestCases.Mac.Tests/Controls.TestCases.Mac.Tests.csproj";
+var projectPath = Argument("project", EnvironmentVariable("MAC_TEST_PROJECT") ?? DEFAULT_MAC_PROJECT);
+var testDevice = Argument("device", EnvironmentVariable("MAC_TEST_DEVICE") ?? "maccatalyst");
+var dotnetRoot = Argument("dotnet-root", EnvironmentVariable("DOTNET_ROOT"));
+var targetFramework = Argument("tfm", EnvironmentVariable("TARGET_FRAMEWORK") ?? $"{DotnetVersion}-maccatalyst");
+var binlogArg = Argument("binlog", EnvironmentVariable("MAC_TEST_BINLOG") ?? "");
+var testApp = Argument("app", EnvironmentVariable("MAC_TEST_APP") ?? "");
+var testAppProjectPath = Argument("appproject", EnvironmentVariable("MAC_TEST_APP_PROJECT") ?? DEFAULT_APP_PROJECT);
+var testResultsPath = Argument("results", EnvironmentVariable("MAC_TEST_RESULTS") ?? GetTestResultsDirectory().FullPath);
+var runtimeIdentifier = Argument("rid", EnvironmentVariable("MAC_RUNTIME_IDENTIFIER") ?? GetDefaultRuntimeIdentifier());
+var deviceCleanupEnabled = Argument("cleanup", true);
 
-const string defaultVersion = "14.4";
+// Directory setup
+var binlogDirectory = DetermineBinlogDirectory(projectPath, binlogArg).FullPath;
+var dotnetToolPath = GetDotnetToolPath();
 
-// required
-FilePath PROJECT = Argument("project", EnvironmentVariable("MAC_TEST_PROJECT") ?? "");
-string TEST_DEVICE = Argument("device", EnvironmentVariable("MAC_TEST_DEVICE") ?? $"ios-simulator-64_{defaultVersion}"); // comma separated in the form <platform>-<device|simulator>[-<32|64>][_<version>] (eg: ios-simulator-64_13.4,[...])
-
-// optional
-var localDotnet = GetBuildVariable("workloads", "local") == "local";
-var DOTNET_PATH = Argument("dotnet-path", EnvironmentVariable("DOTNET_PATH"));
-var TARGET_FRAMEWORK = Argument("tfm", EnvironmentVariable("TARGET_FRAMEWORK") ?? "net7.0-maccatalyst");
-var BINLOG_ARG = Argument("binlog", EnvironmentVariable("IOS_TEST_BINLOG") ?? "");
-DirectoryPath BINLOG_DIR = string.IsNullOrEmpty(BINLOG_ARG) && !string.IsNullOrEmpty(PROJECT.FullPath) ? PROJECT.GetDirectory() : BINLOG_ARG;
-var TEST_APP = Argument("app", EnvironmentVariable("MAC_TEST_APP") ?? "");
-FilePath TEST_APP_PROJECT = Argument("appproject", EnvironmentVariable("MAC_TEST_APP_PROJECT") ?? "");
-var TEST_RESULTS = Argument("results", EnvironmentVariable("MAC_TEST_RESULTS") ?? "");
-
-// other
-string PLATFORM = "mac";
-string DOTNET_PLATFORM = "maccatalyst-x64";
-string CONFIGURATION = Argument("configuration", "Release");
-bool DEVICE_CLEANUP = Argument("cleanup", true);
-
-Information("Project File: {0}", PROJECT);
-Information("Build Binary Log (binlog): {0}", BINLOG_DIR);
-Information("Build Platform: {0}", PLATFORM);
-Information("Build Configuration: {0}", CONFIGURATION);
+Information($"Project File: {projectPath}");
+Information($"Build Binary Log (binlog): {binlogDirectory}");
+Information($"Build Configuration: {configuration}");
+Information($"Build Runtime Identifier: {runtimeIdentifier}");
+Information($"Build Target Framework: {targetFramework}");
+Information($"Test Device: {testDevice}");
+Information($"Test Results Path: {testResultsPath}");
 
 Setup(context =>
 {
-	Cleanup();
+	LogSetupInfo(dotnetToolPath);
+	PerformCleanupIfNeeded(deviceCleanupEnabled);
 });
 
-Teardown(context =>
-{
-	Cleanup();
-});
-
-void Cleanup()
-{
-	if (!DEVICE_CLEANUP)
-		return;
-}
+Teardown(context => PerformCleanupIfNeeded(deviceCleanupEnabled));
 
 Task("Cleanup");
 
+Task("Build")
+	.WithCriteria(!string.IsNullOrEmpty(projectPath))
+	.Does(() =>
+	{
+		ExecuteBuild(projectPath, binlogDirectory, configuration, runtimeIdentifier, targetFramework, dotnetToolPath);
+	});
+
+Task("Test")
+	.IsDependentOn("Build")
+	.Does(() =>
+	{
+		ExecuteTests(projectPath, testDevice, testResultsPath, configuration, targetFramework, runtimeIdentifier, dotnetToolPath);
+	});
+
+Task("uitest-build")
+	.Does(() =>
+	{
+		ExecuteBuildUITestApp(testAppProjectPath, binlogDirectory, configuration, targetFramework, runtimeIdentifier, dotnetToolPath);
+	});
+
 Task("uitest")
 	.Does(() =>
-{
-	if (string.IsNullOrEmpty(TEST_APP) ) {
-		if (string.IsNullOrEmpty(TEST_APP_PROJECT.FullPath))
-			throw new Exception("If no app was specified, an app must be provided.");
-		var binDir = TEST_APP_PROJECT.GetDirectory().Combine("bin").Combine(CONFIGURATION + "/" + TARGET_FRAMEWORK).Combine(DOTNET_PLATFORM).FullPath;
-		Information("BinDir: {0}", binDir);
-		var apps = GetDirectories(binDir + "/*.app");
-		TEST_APP = apps.First().FullPath;
-	}
-	if (string.IsNullOrEmpty(TEST_RESULTS)) {
-		TEST_RESULTS = TEST_APP + "-results";
-	}
-
-	Information("Test Device: {0}", TEST_DEVICE);
-	Information("Test App Project: {0}", TEST_APP_PROJECT);
-	Information("Test App: {0}", TEST_APP);
-	Information("Test Results Directory: {0}", TEST_RESULTS);
-
-	CleanDirectories(TEST_RESULTS);
-
-	Information("Run App project {0}",TEST_APP_PROJECT.FullPath);
-	DotNetCoreBuild(TEST_APP_PROJECT.FullPath, new DotNetCoreBuildSettings {
-			Configuration = CONFIGURATION,
-			ArgumentCustomization = args => args
-				.Append($"-f {TARGET_FRAMEWORK}")
-				.Append("-t:Run")
+	{
+		ExecuteUITests(projectPath, testAppProjectPath, testDevice, testResultsPath, binlogDirectory, configuration, targetFramework, runtimeIdentifier, dotnetToolPath);
 	});
-
-	Information("Build UITests project {0}",PROJECT.FullPath);
-	var name = System.IO.Path.GetFileNameWithoutExtension(PROJECT.FullPath);
-	var binlog = $"{BINLOG_DIR}/{name}-{CONFIGURATION}-mac.binlog";
-	DotNetCoreBuild(PROJECT.FullPath, new DotNetCoreBuildSettings {
-			Configuration = CONFIGURATION,
-			ArgumentCustomization = args => args
-				.Append("/p:ExtraDefineConstants=MACUITEST")
-				.Append("/bl:" + binlog)
-	});
-
-	SetEnvironmentVariable("APPIUM_LOG_FILE", $"{BINLOG_ARG}/appium_mac.log");
-
-	Information("Run UITests project {0}",PROJECT.FullPath);
-	RunTestWithLocalDotNet(PROJECT.FullPath, CONFIGURATION, noBuild: true);
-});
 
 RunTarget(TARGET);
+
+void ExecuteBuild(string project, string binDir, string config, string rid, string tfm, string toolPath)
+{
+	var projectName = System.IO.Path.GetFileNameWithoutExtension(project);
+	var binlog = $"{binDir}/{projectName}-{config}-catalyst.binlog";
+	DotNetBuild(project, new DotNetBuildSettings
+	{
+		Configuration = config,
+		Framework = tfm,
+		MSBuildSettings = new DotNetMSBuildSettings
+		{
+			MaxCpuCount = 0
+		},
+		ToolPath = toolPath,
+		ArgumentCustomization = args => args
+			.Append("/p:BuildIpa=true")
+			.Append($"/p:RuntimeIdentifier={rid}")
+			.Append($"/bl:{binlog}")
+	});
+}
+
+void ExecuteTests(string project, string device, string resultsDir, string config, string tfm, string rid, string toolPath)
+{
+	CleanResults(resultsDir);
+
+	var testApp = GetTestApplications(project, device, config, tfm, rid).FirstOrDefault();
+
+	Information($"Testing App: {testApp}");
+	var settings = new DotNetToolSettings
+	{
+		DiagnosticOutput = true,
+		ToolPath = toolPath,
+		ArgumentCustomization = args => args.Append($"run xharness apple test --app=\"{testApp}\" --targets=\"{device}\" --output-directory=\"{resultsDir}\" --verbosity=\"Debug\" ")
+	};
+
+	bool testsFailed = true;
+	try
+	{
+		DotNetTool("tool", settings);
+		testsFailed = false;
+	}
+	finally
+	{
+		HandleTestResults(resultsDir, testsFailed, true);
+	}
+
+	Information("Testing completed.");
+}
+
+void ExecuteUITests(string project, string app, string device, string resultsDir, string binDir, string config, string tfm, string rid, string toolPath)
+{
+	// Setup environment for UI tests
+	Information("Starting UI Tests...");
+	var testApp = GetTestApplications(app, device, config, tfm, rid).FirstOrDefault();
+
+	Information($"Testing Device: {device}");
+	Information($"Testing App Project: {app}");
+	Information($"Testing App: {testApp}");
+	Information($"Results Directory: {resultsDir}");
+
+	if (string.IsNullOrEmpty(testApp))
+	{
+		throw new Exception("UI Test application path not specified.");
+	}
+
+	// Launch the app so it can be found by the test runner
+	StartProcess("chmod", $"+x {testApp}/Contents/MacOS/Controls.TestCases.HostApp");
+
+	var p = new System.Diagnostics.Process();
+	p.StartInfo.UseShellExecute = true;
+	p.StartInfo.FileName = "open";
+	p.StartInfo.Arguments = testApp;
+	p.Start();
+
+	Information("Build UITests project {0}", project);
+
+	var name = System.IO.Path.GetFileNameWithoutExtension(project);
+	var binlog = $"{binDir}/{name}-{config}-mac.binlog";
+	var appiumLog = $"{binDir}/appium_mac.log";
+	var resultsFileName = SanitizeTestResultsFilename($"{name}-{config}-catalyst-{testFilter}");
+
+	DotNetBuild(project, new DotNetBuildSettings
+	{
+		Configuration = config,
+		ToolPath = toolPath,
+		ArgumentCustomization = args => args
+			.Append("/p:ExtraDefineConstants=MACUITEST")
+			.Append("/bl:" + binlog)
+	});
+
+	SetEnvironmentVariable("APPIUM_LOG_FILE", appiumLog);
+
+	Information("Run UITests project {0}", project);
+	RunTestWithLocalDotNet(project, config, pathDotnet: toolPath, noBuild: true, resultsFileNameWithoutExtension: resultsFileName);
+	Information("UI Tests completed.");
+}
+
+void ExecuteBuildUITestApp(string appProject, string binDir, string config, string tfm, string rid, string toolPath)
+{
+	Information($"Building UI Test app: {appProject}");
+	var projectName = System.IO.Path.GetFileNameWithoutExtension(appProject);
+	var binlog = $"{binDir}/{projectName}-{config}-catalyst.binlog";
+
+	DotNetBuild(appProject, new DotNetBuildSettings
+	{
+		Configuration = config,
+		Framework = tfm,
+		ToolPath = toolPath,
+		ArgumentCustomization = args => args
+			.Append("/t:Restore;Build")
+			.Append($"/bl:{binlog}")
+	});
+
+	Information("UI Test app build completed.");
+}
+
+// Helper methods
+
+void PerformCleanupIfNeeded(bool cleanupEnabled)
+{
+	if (cleanupEnabled)
+	{
+		// Add cleanup logic, possibly deleting temporary files, directories, etc.
+		Information("Cleaning up...");
+	}
+}
+
+string GetDefaultRuntimeIdentifier()
+{
+	var architecture = System.Runtime.InteropServices.RuntimeInformation.OSArchitecture;
+	return architecture == System.Runtime.InteropServices.Architecture.Arm64 ? "maccatalyst-arm64" : "maccatalyst-x64";
+}

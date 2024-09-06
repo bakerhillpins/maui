@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Maui.Controls;
@@ -10,7 +11,44 @@ namespace Microsoft.AspNetCore.Components.WebView.Maui
 	/// </summary>
 	public partial class BlazorWebView : View, IBlazorWebView
 	{
-		internal const string AppHostAddress = "0.0.0.0";
+		internal static string AppHostAddress { get; } = GetAppHostAddress();
+
+		private const string AppHostAddressAlways0000Switch = "BlazorWebView.AppHostAddressAlways0000";
+
+		private static bool IsAppHostAddressAlways0000Enabled =>
+			AppContext.TryGetSwitch(AppHostAddressAlways0000Switch, out var enabled) && enabled;
+
+		private static string GetAppHostAddress()
+		{
+			if (IsAppHostAddressAlways0000Enabled)
+			{
+				return "0.0.0.0";
+			}
+			else
+			{
+#if IOS || MACCATALYST
+				// On iOS/MacCatalyst 18 and higher the 0.0.0.0 address does not work, so we use localhost instead.
+				// This preserves behavior on older versions of those systems, while defaulting to new behavior on
+				// the new system.
+
+				// Note that pre-release versions of iOS/MacCatalyst have the expected Major/Minor values,
+				// but the Build, MajorRevision, MinorRevision, and Revision values are all -1, so we need
+				// to pass in int.MinValue for those values.
+
+				if (System.OperatingSystem.IsIOSVersionAtLeast(major: 18, minor: int.MinValue, build: int.MinValue) ||
+					System.OperatingSystem.IsMacCatalystVersionAtLeast(major: 18, minor: int.MinValue, build: int.MinValue))
+				{
+					return "localhost";
+				}
+				else
+				{
+					return "0.0.0.0";
+				}
+#else
+				return "0.0.0.0";
+#endif
+			}
+		}
 
 		private readonly JSComponentConfigurationStore _jSComponents = new();
 
@@ -22,6 +60,7 @@ namespace Microsoft.AspNetCore.Components.WebView.Maui
 			RootComponents = new RootComponentsCollection(_jSComponents);
 		}
 
+		/// <inheritdoc />
 		JSComponentConfigurationStore IBlazorWebView.JSComponents => _jSComponents;
 
 		/// <summary>
@@ -75,12 +114,35 @@ namespace Microsoft.AspNetCore.Components.WebView.Maui
 			return ((BlazorWebViewHandler)(Handler!)).CreateFileProvider(contentRootDir);
 		}
 
+		/// <summary>
+		/// Calls the specified <paramref name="workItem"/> asynchronously and passes in the scoped services available to Razor components.
+		/// </summary>
+		/// <param name="workItem">The action to call.</param>
+		/// <returns>Returns a <see cref="Task"/> representing <c>true</c> if the <paramref name="workItem"/> was called, or <c>false</c> if it was not called because Blazor is not currently running.</returns>
+		/// <exception cref="ArgumentNullException">Thrown if <paramref name="workItem"/> is <c>null</c>.</exception>
+#if ANDROID
+		[System.Runtime.Versioning.SupportedOSPlatform("android23.0")]
+#endif
+		public virtual async Task<bool> TryDispatchAsync(Action<IServiceProvider> workItem)
+		{
+			ArgumentNullException.ThrowIfNull(workItem);
+			if (Handler is null)
+			{
+				return false;
+			}
+
+			return await ((BlazorWebViewHandler)(Handler!)).TryDispatchAsync(workItem);
+		}
+
+		/// <inheritdoc />
 		void IBlazorWebView.UrlLoading(UrlLoadingEventArgs args) =>
 			UrlLoading?.Invoke(this, args);
 
+		/// <inheritdoc />
 		void IBlazorWebView.BlazorWebViewInitializing(BlazorWebViewInitializingEventArgs args) =>
 			BlazorWebViewInitializing?.Invoke(this, args);
 
+		/// <inheritdoc />
 		void IBlazorWebView.BlazorWebViewInitialized(BlazorWebViewInitializedEventArgs args) =>
 			BlazorWebViewInitialized?.Invoke(this, args);
 	}

@@ -11,14 +11,16 @@ namespace Microsoft.Maui.Controls
 	{
 		bool _isSealed;
 
+		//each trigger is different
+		static int count = 1;
+
 		internal TriggerBase(Type targetType)
 		{
-			if (targetType == null)
-				throw new ArgumentNullException("targetType");
-			TargetType = targetType;
+			TargetType = targetType ?? throw new ArgumentNullException(nameof(targetType));
 
 			EnterActions = new SealedList<TriggerAction>();
 			ExitActions = new SealedList<TriggerAction>();
+			Specificity = new SetterSpecificity(0, 100 + (count++), 0, 0, 0, 0, 0, 0);
 		}
 
 		internal TriggerBase(Condition condition, Type targetType) : this(targetType)
@@ -57,12 +59,15 @@ namespace Microsoft.Maui.Controls
 		//Setters and Condition are used by Trigger, DataTrigger and MultiTrigger
 		internal IList<Setter> Setters { get; }
 
+		//FIXME: add specificity as ctor argument
+		internal SetterSpecificity Specificity { get; }
+
 		void IAttachedObject.AttachTo(BindableObject bindable)
 		{
 			IsSealed = true;
 
 			if (bindable == null)
-				throw new ArgumentNullException("bindable");
+				throw new ArgumentNullException(nameof(bindable));
 			if (!TargetType.IsInstanceOfType(bindable))
 				throw new InvalidOperationException("bindable not an instance of AssociatedType");
 			OnAttachedTo(bindable);
@@ -71,7 +76,7 @@ namespace Microsoft.Maui.Controls
 		void IAttachedObject.DetachFrom(BindableObject bindable)
 		{
 			if (bindable == null)
-				throw new ArgumentNullException("bindable");
+				throw new ArgumentNullException(nameof(bindable));
 			OnDetachingFrom(bindable);
 		}
 
@@ -104,12 +109,12 @@ namespace Microsoft.Maui.Controls
 				foreach (TriggerAction action in EnterActions)
 					action.DoInvoke(bindable);
 				foreach (Setter setter in Setters)
-					setter.Apply(bindable);
+					setter.Apply(bindable, Specificity);
 			}
 			else
 			{
 				foreach (Setter setter in Setters)
-					setter.UnApply(bindable);
+					setter.UnApply(bindable, Specificity);
 				foreach (TriggerAction action in ExitActions)
 					action.DoInvoke(bindable);
 			}

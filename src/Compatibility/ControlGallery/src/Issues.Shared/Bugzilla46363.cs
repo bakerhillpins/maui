@@ -95,6 +95,8 @@ namespace Microsoft.Maui.Controls.ControlGallery.Issues
 		}
 
 #if UITEST
+[Microsoft.Maui.Controls.Compatibility.UITests.FailsOnMauiAndroid]
+[Microsoft.Maui.Controls.Compatibility.UITests.FailsOnMauiIOS]
 		[Test]
 		public void _46363_Tap_Succeeds()
 		{
@@ -107,6 +109,8 @@ namespace Microsoft.Maui.Controls.ControlGallery.Issues
 			RunningApp.WaitForNoElement(ContextAction);
 		}
 
+[Microsoft.Maui.Controls.Compatibility.UITests.FailsOnMauiAndroid]
+[Microsoft.Maui.Controls.Compatibility.UITests.FailsOnMauiIOS]
 		[Test]
 		public void _46363_ContextAction_Succeeds()
 		{

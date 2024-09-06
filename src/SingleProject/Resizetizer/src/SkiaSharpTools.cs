@@ -7,6 +7,16 @@ namespace Microsoft.Maui.Resizetizer
 {
 	internal abstract class SkiaSharpTools
 	{
+		static SkiaSharpTools()
+		{
+			// DO NOT DELETE!
+			// Because we are doing dangerous things - like using a net462 assembly in a netstandard2.0 assembly
+			// we need to make sure the correct dependencies are loaded. We use net462 because this has special
+			// native library loading logic for the .NET Framework (Visual Studio). 
+			var span = (Span<SKPoint>)new SKPoint[1];
+			span[0] = new SKPoint();
+		}
+
 		public static SkiaSharpTools Create(bool isVector, string filename, SKSize? baseSize, SKColor? backgroundColor, SKColor? tintColor, ILogger logger)
 			=> isVector
 				? new SkiaSharpSvgTools(filename, baseSize, backgroundColor, tintColor, logger) as SkiaSharpTools
@@ -26,15 +36,15 @@ namespace Microsoft.Maui.Resizetizer
 			Filename = filename;
 			BaseSize = baseSize;
 			BackgroundColor = backgroundColor;
+			Paint = new SKPaint
+			{
+				FilterQuality = SKFilterQuality.High
+			};
 
 			if (tintColor is SKColor tint)
 			{
 				Logger?.Log($"Detected a tint color of {tint}");
-
-				Paint = new SKPaint
-				{
-					ColorFilter = SKColorFilter.CreateBlendMode(tint, SKBlendMode.SrcIn)
-				};
+				Paint.ColorFilter = SKColorFilter.CreateBlendMode(tint, SKBlendMode.SrcIn);
 			}
 		}
 

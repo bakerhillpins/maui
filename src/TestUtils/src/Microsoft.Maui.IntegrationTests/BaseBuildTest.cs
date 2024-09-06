@@ -1,8 +1,20 @@
 ﻿
 namespace Microsoft.Maui.IntegrationTests
 {
+	public enum RuntimeVariant
+	{
+		Mono,
+		NativeAOT
+	}
+
 	public class BaseBuildTest
 	{
+		public const string DotNetCurrent = "net8.0";
+		public const string DotNetPrevious = "net7.0";
+
+		public const string MauiVersionCurrent = "8.0.0-rc.1.9171"; // this should not be the same as the last release
+		public const string MauiVersionPrevious = "7.0.86"; // this should not be the same version as the default. aka: MicrosoftMauiPreviousDotNetReleasedVersion in eng/Versions.props
+
 		char[] invalidChars = { '{', '}', '(', ')', '$', ':', ';', '\"', '\'', ',', '=', '.', '-', };
 
 		public string TestName
@@ -18,12 +30,14 @@ namespace Microsoft.Maui.IntegrationTests
 			}
 		}
 
+		public string LogDirectory => Path.Combine(TestEnvironment.GetLogDirectory(), TestName);
+
 		public string TestDirectory => Path.Combine(TestEnvironment.GetTestDirectoryRoot(), TestName);
 
 		public string TestNuGetConfig => Path.Combine(TestEnvironment.GetTestDirectoryRoot(), "NuGet.config");
 
 		// Properties that ensure we don't use cached packages, and *only* the empty NuGet.config
-		protected string[] BuildProps => new[]
+		protected List<string> BuildProps => new()
 		{
 			"RestoreNoCache=true",
 			//"GenerateAppxPackageOnBuild=true",
@@ -33,6 +47,8 @@ namespace Microsoft.Maui.IntegrationTests
 			$"CustomBeforeMicrosoftCSharpTargets={Path.Combine(TestEnvironment.GetMauiDirectory(), "src", "Templates", "TemplateTestExtraTargets.targets")}",
 			//Try not restore dependencies of 6.0.10
 			$"DisableTransitiveFrameworkReferenceDownloads=true",
+			// Surface warnings as build errors
+			"TreatWarningsAsErrors=true",
 		};
 
 
@@ -51,6 +67,7 @@ namespace Microsoft.Maui.IntegrationTests
 				"Microsoft.Maui.Essentials.*.nupkg",
 				"Microsoft.Maui.Graphics.*.nupkg",
 				"Microsoft.Maui.Maps.*.nupkg",
+				"Microsoft.Maui.Resizetizer.*.nupkg",
 				"Microsoft.AspNetCore.Components.WebView.*.nupkg",
 			};
 
@@ -71,9 +88,8 @@ namespace Microsoft.Maui.IntegrationTests
 			}
 
 			File.Copy(Path.Combine(TestEnvironment.GetMauiDirectory(), "NuGet.config"), TestNuGetConfig, true);
-			FileUtilities.ReplaceInFile(TestNuGetConfig,
-				"<!-- <add key=\"local\" value=\"artifacts\" /> -->",
-				$"<add key=\"nuget-only\" value=\"{extraPacksDir}\" />");
+			FileUtilities.ReplaceInFile(TestNuGetConfig, "<add key=\"nuget-only\" value=\"true\" />", "");
+			FileUtilities.ReplaceInFile(TestNuGetConfig, "NUGET_ONLY_PLACEHOLDER", extraPacksDir);
 		}
 
 		[SetUp]
@@ -91,25 +107,10 @@ namespace Microsoft.Maui.IntegrationTests
 		[TearDown]
 		public void BuildTestTearDown()
 		{
-			// Clean up test or attach content from failed tests
-			if (TestContext.CurrentContext.Result.Outcome.Status == NUnit.Framework.Interfaces.TestStatus.Passed ||
-				TestContext.CurrentContext.Result.Outcome.Status == NUnit.Framework.Interfaces.TestStatus.Skipped)
+			// Attach test content and logs as artifacts
+			foreach (var log in Directory.GetFiles(Path.Combine(TestDirectory), "*log", SearchOption.AllDirectories))
 			{
-				try
-				{
-					if (Directory.Exists(TestDirectory))
-						Directory.Delete(TestDirectory, recursive: true);
-				}
-				catch (IOException)
-				{
-				}
-			}
-			else
-			{
-				foreach (var log in Directory.GetFiles(Path.Combine(TestDirectory), "*log", SearchOption.AllDirectories))
-				{
-					TestContext.AddTestAttachment(log, Path.GetFileName(TestDirectory));
-				}
+				TestContext.AddTestAttachment(log, Path.GetFileName(TestDirectory));
 			}
 		}
 

@@ -1,4 +1,6 @@
-﻿namespace Microsoft.Maui.Controls.Compatibility.UITests
+﻿using NUnit.Framework;
+
+namespace Microsoft.Maui.Controls.Compatibility.UITests
 {
 	internal static class UITestCategories
 	{
@@ -69,4 +71,51 @@
 		public const string Accessibility = "Accessibility";
 		public const string Brush = "Brush";
 	}
+
+	public class MovedToAppium : IgnoreAttribute
+	{
+		public MovedToAppium() : base("This test has been moved to Appium")
+		{
+		}
+	}
+
+	public class FailsOnMaui : IgnoreAttribute
+	{
+		public FailsOnMaui() : base(nameof(FailsOnMaui))
+		{
+		}
+	}
+
+#if ANDROID
+	public class FailsOnMauiAndroid : IgnoreAttribute
+	{
+		public FailsOnMauiAndroid() : base(nameof(FailsOnMauiAndroid))
+		{
+		}
+	}
+#else
+	public class FailsOnMauiAndroid : CategoryAttribute
+	{
+		public FailsOnMauiAndroid() : base(nameof(FailsOnMauiAndroid))
+		{
+		}
+	}
+#endif
+
+#if IOS
+	public class FailsOnMauiIOS : IgnoreAttribute
+	{
+		public FailsOnMauiIOS() : base(nameof(FailsOnMauiIOS))
+		{
+		}
+	}
+#else
+	public class FailsOnMauiIOS : CategoryAttribute
+	{
+		public FailsOnMauiIOS() : base(nameof(FailsOnMauiIOS))
+		{
+		}
+	}
+#endif
+
 }

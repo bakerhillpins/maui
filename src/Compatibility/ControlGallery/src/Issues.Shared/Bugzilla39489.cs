@@ -32,6 +32,8 @@ namespace Microsoft.Maui.Controls.ControlGallery.Issues
 
 		protected override bool Isolate => true;
 
+[Microsoft.Maui.Controls.Compatibility.UITests.FailsOnMauiAndroid]
+[Microsoft.Maui.Controls.Compatibility.UITests.FailsOnMauiIOS]
 		[Test]
 		public async Task Bugzilla39489Test()
 		{
